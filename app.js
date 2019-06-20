@@ -24,6 +24,33 @@ app.use(session({
   renew: false
 }, app));
 
+// catch 404 and forward to error handler
+app.use(async (ctx, next) => {
+  const err = new Error('Not Found');
+  err.status = 404;
+  await next(err);
+});
+
+// error handler
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (err) {
+    ctx.status = err.status || 500;
+    ctx.render('error', { status: err.status, message: err.message });
+  }
+});
+app.use(async (ctx, next) => {
+  if (ctx.path.indexOf('/admin') !== -1) {
+    if (!ctx.session.isAuth) {
+      ctx.redirect('/login');
+    } else {
+      await next();
+    }
+  } else {
+    await next();
+  }
+});
 const flash = require('koa-flash-simple');
 app.use(flash());
 

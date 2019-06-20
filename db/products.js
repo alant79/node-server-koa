@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-
 const productsPath = path.join(__dirname, '../temp/products.json');
 
 exports.get = () => new Promise(async (resolve, reject) => {
@@ -15,30 +14,8 @@ exports.get = () => new Promise(async (resolve, reject) => {
   }
 });
 
-exports.add = ({ photo, name, price }) => new Promise(async (resolve, reject) => {
+exports.add = ({ photoName, name, price }) => new Promise(async (resolve, reject) => {
   try {
-    const { name: photoName, size, path: tempPath } = photo;
-    const uploadDir = path.join(process.cwd(), '/public', 'assets', 'img', 'products');
-
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
-    }
-
-    if (!name || !price) {
-      fs.unlinkSync(tempPath);
-      reject(new Error('All fields are required'));
-      return;
-    }
-    if (!photoName || !size) {
-      fs.unlinkSync(tempPath);
-      reject(new Error('File not saved'));
-      return;
-    }
-
-    fs.renameSync(tempPath, path.join(uploadDir, photoName));
-
-    //
-
     let products = [];
     if (fs.existsSync(productsPath)) {
       products = JSON.parse(fs.readFileSync(productsPath, 'utf-8'));

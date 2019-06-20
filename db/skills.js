@@ -17,10 +17,6 @@ exports.get = () => new Promise(async (resolve, reject) => {
 
 exports.edit = ({ age, concerts, cities, years }) => new Promise(async (resolve, reject) => {
   try {
-    if (!age || !concerts || !cities || !years) {
-      reject(new Error('All fields are required'));
-      return;
-    }
     let newSkills = [];
     newSkills.push({
       'number': age,

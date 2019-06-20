@@ -1,0 +1,15 @@
+extends /_template-admin
+
+block variables
+  - var title = 'Error page'
+
+block content
+  .wrapper
+    header.admin-header
+      .container.admin-header__container
+        .admin-header__title Страница ошибки
+        a(href="/").admin-header__link Вернуться на сайт
+        if (status)
+            h1.status= status
+        if (message)
+            h1.status= message    
