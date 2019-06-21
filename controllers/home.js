@@ -10,7 +10,9 @@ module.exports.get = async (ctx) => {
       products, skills, msgemail
     });
   } catch (err) {
-    ctx.render('error', { status: ctx.status, message: err });
+    const status = 500;
+    ctx.status = status;
+    ctx.render('error', { status, message: err });
   }
 };
 
@@ -22,6 +24,8 @@ module.exports.post = async (ctx) => {
     const { name, email, message } = ctx.request.body;
     if (!name || !email) {
       ctx.flash.set({ msgemail: 'All fields are required' });
+      const status = 400;
+      ctx.status = status;
       ctx.redirect('/');
       return;
     }
@@ -31,6 +35,8 @@ module.exports.post = async (ctx) => {
       products, skills, msgemail
     });
   } catch (err) {
-    ctx.render('error', { status: ctx.status, message: err });
+    const status = 500;
+    ctx.status = status;
+    ctx.render('error', { status, message: err });
   }
 };

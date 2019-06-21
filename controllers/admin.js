@@ -9,7 +9,9 @@ module.exports.get = async (ctx) => {
     const msgfile = ctx.flash && ctx.flash.get() ? ctx.flash.get().msgfile : null;
     ctx.render('admin', { msgskill, msgfile });
   } catch (err) {
-    ctx.render('error', { status: ctx.status, message: err });
+    const status = 500;
+    ctx.status = status;
+    ctx.render('error', { status, message: err });
   }
 };
 
@@ -26,7 +28,9 @@ module.exports.postEditSkills = async (ctx) => {
     await skillsDb.edit({ ...ctx.request.body });
     ctx.render('admin');
   } catch (err) {
-    ctx.render('error', { status: ctx.status, message: err });
+    const status = 500;
+    ctx.status = status;
+    ctx.render('error', { status, message: err });
   }
 };
 
@@ -40,11 +44,13 @@ module.exports.postAddProduct = async ctx => {
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir);
     }
-    let err;
+    let err, status;
     if (!name || !price) {
       err = 'All fields are required';
       fs.unlinkSync(tempPath);
       ctx.flash.set({ msgfile: err });
+      status = 400;
+      ctx.status = status;
       ctx.redirect('/admin');
       return;
     }
@@ -52,6 +58,8 @@ module.exports.postAddProduct = async ctx => {
       err = 'File not saved';
       fs.unlinkSync(tempPath);
       ctx.flash.set({ msgfile: err });
+      status = 400;
+      ctx.status = status;
       ctx.redirect('/admin');
       return;
     }
@@ -59,6 +67,8 @@ module.exports.postAddProduct = async ctx => {
     await productsDb.add({ photoName, name, price });
     ctx.render('admin');
   } catch (err) {
-    ctx.render('error', { status: ctx.status, message: err });
+    const status = 500;
+    ctx.status = status;
+    ctx.render('error', { status, message: err });
   }
 };
