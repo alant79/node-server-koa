@@ -12,7 +12,7 @@ class DB {
     return path.join(process.cwd(), this.file);
   }
   init (data) {
-    fs.writeFileSync(this._fullnameFile(), JSON.stringify(data));
+    fs.writeFileSync(this._fullnameFile(), JSON.stringify(data, '', 4));
   }
   find (type) {
     let data = [];
@@ -64,7 +64,7 @@ class DB {
       );
       currentData[type] = newSkills;
       fs.writeFileSync(
-        path.join(this._fullnameFile()),
+        this._fullnameFile(),
         JSON.stringify(currentData, '', 4)
       );
     }
