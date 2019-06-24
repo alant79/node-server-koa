@@ -1,5 +1,7 @@
 const Koa = require('koa');
 const app = new Koa();
+require('./db');
+require('./engine');
 
 const Pug = require('koa-pug');
 const pug = new Pug({
