@@ -40,7 +40,13 @@ ENGINE.on('admin/skills', async response => {
         status: status
       });
     }
-    DATABASE.emit('skills/post', ctx.request.body).then(() => response.reply(true));
+    const data = [
+      { number: ctx.request.body.age, text: 'Возраст начала занятий на скрипке', id: 1 },
+      { number: ctx.request.body.concerts, text: 'Концертов отыграл', id: 2 },
+      { number: ctx.request.body.cities, text: 'Максимальное число городов в туре', id: 3 },
+      { number: ctx.request.body.years, text: 'Лет на сцене в качестве скрипача', id: 4 }
+    ];
+    DATABASE.emit('skills/post', data).then(() => response.reply(true));
   });
 });
 
@@ -49,7 +55,13 @@ ENGINE.on('admin/upload', async response => {
   const { name, price } = ctx.request.body;
   const { photo } = ctx.request.files;
   const { name: photoName, size, path: tempPath } = photo;
-  const uploadDir = path.join(process.cwd(), '/public', 'assets', 'img', 'products');
+  const uploadDir = path.join(
+    process.cwd(),
+    '/public',
+    'assets',
+    'img',
+    'products'
+  );
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
   }
@@ -77,12 +89,17 @@ ENGINE.on('admin/upload', async response => {
     });
   }
   fs.renameSync(tempPath, path.join(uploadDir, photoName));
-  DATABASE.emit('products/post', { name, price, photoName }).then(() => response.reply(true));
+  DATABASE.emit('products/post', {
+    src: './assets/img/products/' + photoName,
+    name: name,
+    price: price
+  }).then(() => response.reply(true));
 });
 
 ENGINE.on('home/get', async response => {
   let ctx = response.data;
-  const msgemail = ctx.flash && ctx.flash.get() ? ctx.flash.get().msgemail : null;
+  const msgemail =
+    ctx.flash && ctx.flash.get() ? ctx.flash.get().msgemail : null;
   const products = await DATABASE.emit('products/get');
   const skills = await DATABASE.emit('skills/get');
   response.reply({ products, skills, msgemail });

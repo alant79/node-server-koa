@@ -2,6 +2,7 @@ const ee = require('@nauma/eventemitter');
 const DATABASE = new ee.EventEmitter('database');
 const fs = require('fs');
 const path = require('path');
+const objectPath = require('object-path');
 global.DATABASE = DATABASE;
 
 class DB {
@@ -26,7 +27,10 @@ class DB {
       try {
         let data = [];
         if (fs.existsSync(this._fullnameFile())) {
-          data = JSON.parse(fs.readFileSync(this._fullnameFile(), 'utf-8'))[type];
+          data = objectPath.get(JSON.parse(fs.readFileSync(this._fullnameFile(), 'utf-8')), type);
+        }
+        if (!data) {
+          throw new Error('В БД не обнаружена таблица ', type);
         }
         resolve(data);
       } catch (err) {
@@ -39,9 +43,12 @@ class DB {
       try {
         let data = [];
         if (fs.existsSync(this._fullnameFile())) {
-          data = JSON.parse(fs.readFileSync(this._fullnameFile(), 'utf-8'))[type];
+          data = objectPath.get(JSON.parse(fs.readFileSync(this._fullnameFile(), 'utf-8')), type);
         }
-        const item = data.find(elem => elem[field] === value)[field];
+        if (!data) {
+          throw new Error('В БД не обнаружена таблица ', type);
+        }
+        const item = data.find(elem => objectPath.get(elem, field, '') === value);
         resolve(item);
       } catch (err) {
         reject(err);
@@ -51,64 +58,42 @@ class DB {
   add (type, data) {
     return new Promise((resolve, reject) => {
       try {
-        if (type === 'products') {
-          // отработаем только добавление products, для данной задачи skills не нужно
-          let currentData = JSON.parse(fs.readFileSync(this._fullnameFile(), 'utf-8'));
-          const { photoName, name, price } = data;
-          let newProducts = currentData[type];
-          newProducts.push({
-            'src': './assets/img/products/' + photoName,
-            'name': name,
-            'price': price,
-            'id': newProducts.length + 1
-          });
-          currentData[type] = newProducts;
-          fs.writeFileSync(this._fullnameFile(), JSON.stringify(currentData, '', 4));
+        let currentData = JSON.parse(fs.readFileSync(this._fullnameFile(), 'utf-8'));
+        let newData = objectPath.get(currentData, type);
+        if (!newData) {
+          throw new Error('В БД не обнаружена таблица ', type);
         }
+        const id = newData.length + 1;
+        data.id = id;
+        newData.push(data);
+        currentData[type] = newData;
+        fs.writeFileSync(this._fullnameFile(), JSON.stringify(currentData, '', 4));
         resolve(true);
       } catch (err) {
         reject(err);
       }
     });
   }
-  // delete (type, data) {} для данной задачи реализовывать не нужно
-  // get (type, data) {} для данной задачи реализовывать не нужно
-  update (type, data) {
+  update (type, field, value, data) {
     return new Promise((resolve, reject) => {
       try {
-        if (type === 'skills') {
-          // отработаем только редактирование skills, для данной задачи products не нужно
-          let currentData = JSON.parse(fs.readFileSync(this._fullnameFile(), 'utf-8'));
-          const { age, concerts, cities, years } = data;
-          let newSkills = [];
-          newSkills.push(
-            {
-              number: age,
-              text: 'Возраст начала занятий на скрипке',
-              id: 1
-            },
-            {
-              number: concerts,
-              text: 'Концертов отыграл',
-              id: 2
-            },
-            {
-              number: cities,
-              text: 'Максимальное число городов в туре',
-              id: 3
-            },
-            {
-              number: years,
-              text: 'Лет на сцене в качестве скрипача',
-              id: 4
-            }
-          );
-          currentData[type] = newSkills;
-          fs.writeFileSync(
-            this._fullnameFile(),
-            JSON.stringify(currentData, '', 4)
-          );
+        let currentData = JSON.parse(fs.readFileSync(this._fullnameFile(), 'utf-8'));
+        const newData = objectPath.get(currentData, type);
+        if (!newData) {
+          throw new Error('В БД не обнаружена таблица ', type);
         }
+        let result = newData.map(elem => {
+          if (objectPath.get(elem, field) === value) {
+            return data;
+          } else {
+            return elem;
+          }
+        });
+        currentData[type] = result;
+        fs.writeFileSync(
+          this._fullnameFile(),
+          JSON.stringify(currentData, '', 4)
+        );
         resolve(true);
       } catch (err) {
         reject(err);
@@ -141,5 +126,8 @@ DATABASE.on('products/post', async response => {
 });
 
 DATABASE.on('skills/post', async response => {
-  response.reply(await db.update('skills', response.data));
+  response.data.forEach(async item => {
+    await db.update('skills', 'id', item.id, item);
+  });
+  response.reply(true);
 });
