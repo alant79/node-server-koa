@@ -15,6 +15,17 @@ class DB {
   init (data) {
     return new Promise((resolve, reject) => {
       try {
+        if (!fs.existsSync(this._fullnameFile())) {
+          fs.writeFileSync(this._fullnameFile(), JSON.stringify(data, '', 4));
+        } else {
+          let dataFile = JSON.parse(fs.readFileSync(this._fullnameFile(), 'utf-8'));
+          for (let key in data) {
+            let dataTable = objectPath.get(dataFile, key);
+            if (!dataTable) {
+              dataFile[key] = objectPath.get(data, key);
+            }
+          }
+        }
         fs.writeFileSync(this._fullnameFile(), JSON.stringify(data, '', 4));
         resolve(true);
       } catch (err) {
